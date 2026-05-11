@@ -1,0 +1,41 @@
+table {
+  border-collapse: collapse; 
+  border: 1px solid #343a40;
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+td, tr, th {
+  border: 1px solid #343a40;
+  padding: 5px;
+}
+
+.table-dark{
+  background-color: #343a40;
+  color: #fff;
+}
+.bg-yellow{
+  background-color: #FFE162; 
+}
+.fontt{
+  font-size: 15px;
+}
+.bg-gray{
+  background-color: #b0b0b0;
+}
+h1{
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: center;
+}
+
+h3{
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: right;
+}
+
+.bg-blue{
+  background-color: #0081C9;
+    color: #fff;
+}

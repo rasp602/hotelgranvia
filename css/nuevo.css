@@ -1,0 +1,44 @@
+.espacio{
+	margin-top: 95px;
+}
+
+.titulos{
+	color: black;
+}
+
+.contenidoTabla{
+
+  text-align: center;
+  
+
+}
+
+.contenidoResultado{
+
+  text-align: left;
+
+}
+
+.tituloTabla{
+	color:#2897D2;
+
+}
+
+.titulosMenu{
+	color: #AAB7B8;
+
+}
+
+.azul{
+	background-color: red;
+	color: #2897D2;
+}
+
+#nombresListContainer {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    max-height: 200px; /* Altura máxima de la lista para evitar desbordamiento */
+    overflow-y: auto; /* Agregar desplazamiento vertical si la lista es demasiado larga */
+    z-index: 1000; /* Asegura que la lista esté por encima de otros elementos */
+}
