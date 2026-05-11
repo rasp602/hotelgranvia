@@ -2,9 +2,6 @@
 header('Content-Type: text/html; charset=UTF-8');
 require_once 'bd/database.php';
 require_once 'bd/databaseServer.php';
-require_once 'bd/databaseServerh2.php';
-require_once 'bd/databaseServerh3.php';
-require_once 'bd/databaseServerh4.php';
 
 
 
