@@ -8,7 +8,7 @@
 
 /* Creando una nueva conexión a la base de datos. */
 //$conn = new mysqli("190.101.222.6", "hotel", "chile2023$", "hoteleria");
-$conn = new mysqli("190.162.46.97", "hotel", "chile2023$", "hoteleria");
+$conn = new mysqli("localhost", "root", "Rodrigo2410$", "hoteleria");
 
 /* Comprobando si hay un error de conexión. */
 if ($conn->connect_error) {

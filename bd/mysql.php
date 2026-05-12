@@ -21,9 +21,9 @@
         echo 'Connection error: ' . mysqli_connect_error();
     }*/
 
-    define("MYSQL_USER","hotel");
-    define("MYSQL_PASS","chile2023$");
-    define("MYSQL_SERVER","190.162.46.97");
+    define("MYSQL_USER","root");
+    define("MYSQL_PASS","Rodrigo2410$");
+    define("MYSQL_SERVER","localhost");
     define("MYSQL_DATABASE","hoteleria");
 
     $conn = mysqli_connect(MYSQL_SERVER, MYSQL_USER, MYSQL_PASS, MYSQL_DATABASE);
