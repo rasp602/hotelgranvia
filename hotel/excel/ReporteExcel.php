@@ -4,14 +4,14 @@
 	require '../../bd/conexionLocal.php';
 	
 
-	$nombreHotel = $_REQUEST['nombreHotel'];
+	$campo = $_REQUEST['campo'];
 	$id_user = $_REQUEST['id_user'];
 date_default_timezone_set("America/Santiago");
 $hora=date('H:i:s');
 $date=date('d-m-Y');
-
-if ($nombreHotel!="") {
-    $where="where hotel.nombreHotel='".$nombreHotel."'";
+$where="";
+if ($campo!="") {
+    $where="where hotel.nombreHotel='".$campo."'";
    /* echo "if actividad"; */
 }
 

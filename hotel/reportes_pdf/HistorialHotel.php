@@ -165,14 +165,14 @@ function Footer()
 $fechaInicio=Date('2000-01-01');
 $fechaFin=Date('3000-01-01');
 
-$nombreHotel = $_REQUEST["nombreHotel"];
+$campo = $_REQUEST["campo"];
 
 $fecha1= Date('3000-01-01');
 
 $where="";
 
-if ($nombreHotel!="") {
-    $where="where nombreHotel LIKE'%".$nombreHotel."%'";
+if ($campo!="") {
+    $where="where nombreHotel LIKE'%".$campo."%'";
 }
 
 
