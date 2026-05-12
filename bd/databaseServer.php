@@ -4,7 +4,7 @@ class DatabaseLocal
     public static function ConectarLocal()
     {
       //  $pdo = new PDO('mysql:host=190.101.222.6;dbname=hoteleria;charset=utf8', 'hotel', 'chile2023$');
-		$pdo = new PDO('mysql:host=localhost;dbname=hoteleria;charset=utf8', 'root', 'Rodrigo2410$');
+		$pdo = new PDO('mysql:host=31.97.87.58:3306;dbname=hoteleria;charset=utf8', 'root', 'Rodrigo2410$');
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);	
         return $pdo;
     }

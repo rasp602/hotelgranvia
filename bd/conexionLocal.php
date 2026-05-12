@@ -1,13 +1,13 @@
 <?php 
 //$mysqli = new mysqli("190.101.222.6", "root", "Rodrigo2410$", "hoteleria");
-$mysqli = new mysqli("localhost", "root", "Rodrigo2410$", "hoteleria");
+$mysqli = new mysqli("31.97.87.58:3306", "root", "Rodrigo2410$", "hoteleria");
 if ($mysqli->connect_error)
 {
 	die ('ERROR: No se establecio la conexion.'.mysqli_connect_error());
 }
 
  	# conectare la base de datos
-    $con=@mysqli_connect('localhost', 'root', 'Rodrigo2410$', 'hoteleria');
+    $con=@mysqli_connect('31.97.87.58:3306', 'root', 'Rodrigo2410$', 'hoteleria');
 
     if(!$con){
         die("imposible conectar: ".mysqli_error($con));
@@ -17,7 +17,7 @@ if ($mysqli->connect_error)
     }
 
 
-    $servername = "localhost";
+    $servername = "31.97.87.58:3306";
     $username = "root";
     $password = "Rodrigo2410$";
     $dbname = "hoteleria";
@@ -28,7 +28,7 @@ if ($mysqli->connect_error)
         die("Conexión fallida: " . $conn->connect_error);
     }
 
-    $servername = "localhost";
+    $servername = "31.97.87.58:3306";
     $username = "root";
     $password = "Rodrigo2410$";
     $dbname = "hoteleria";
@@ -47,7 +47,7 @@ if ($mysqli->connect_error)
         die(json_encode(['message' => "Conexión fallida: " . $conn->connect_error]));
     }
 
-    $conn = new mysqli("localhost", "root", "Rodrigo2410$", "hoteleria");
+    $conn = new mysqli("31.97.87.58:3306", "root", "Rodrigo2410$", "hoteleria");
 
     /* Comprobando si hay un error de conexión. */
     if ($conn->connect_error) {
