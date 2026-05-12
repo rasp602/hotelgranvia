@@ -1,0 +1,134 @@
+  function reportePDF1(){
+        var nombreTrabajador = $("#nombreTrabajador").val();        
+        var desde = $("#desde").val();
+        var hasta = $("#hasta").val();
+        var idHotel = $("#idHotel").val();
+    window.open('ingreso/reportes_pdf/list_ingreso.php?nombreTrabajador='+nombreTrabajador+'&idHotel='+idHotel+'&desde='+desde+'&hasta='+hasta);
+}
+
+  function reportePDFmes(){
+             
+        var mes = $("#mes").val();
+        var idTrabajador = $('#idTrabajador').val();
+
+    window.open('ingreso/reportes_pdf/pdfNuevo3.php?mes='+mes+'&idTrabajador='+idTrabajador);
+}
+
+    $(document).ready(function(){
+  
+        load11();
+    });
+
+
+    function load11(page){
+        
+     
+        
+        var desde = $("#desde").val();
+        var hasta = $("#hasta").val();
+        var idUsuario = $('#idUsuario').val();
+        var parametros = {"action":"ajax","page":page,"desde":desde,"hasta":hasta,"idUsuario":idUsuario};
+       
+        $.ajax({
+            url:'ingreso/reportes/list_miResumen.php',
+            data: parametros,      
+            success:function(data){             
+                $(".outer_div").html(data).fadeIn('slow');              
+            }
+        })
+    
+}
+
+
+ $(document).ready(function(){
+        load12();
+
+
+    });
+
+    function load12(page){
+        $("#nombreTrabajador").keyup(function(e){
+        e.preventDefault();  
+        $("#outer_div").empty();
+        
+        var nombreTrabajador = $("#nombreTrabajador").val();
+        var desde = $("#desde").val();
+        var hasta = $("#hasta").val();
+        var id_user = $('#id_user').val();
+        var parametros = {"action":"ajax","page":page,"nombreTrabajador":nombreTrabajador,"desde":desde,"hasta":hasta};
+       
+        $.ajax({
+           url:'ingreso/reportes/list_ingreso.php',
+            data: parametros,
+         
+            success:function(data){
+            
+                $(".outer_div").html(data).fadeIn('slow');
+            
+            }
+        })
+    });
+} 
+
+/*
+   $(document).ready(function(){
+        load77();
+
+    });
+
+    function load77(page){
+        $("#desde").change(function(e){
+        e.preventDefault();  
+        var nombreTrabajador = $("#nombreTrabajador").val();
+        var desde = $("#desde").val();
+        var hasta = $("#hasta").val();
+        var id_user = $('#id_user').val();
+        var parametros = {"action":"ajax","page":page,"nombreTrabajador":nombreTrabajador,"desde":desde,"hasta":hasta};
+       
+        $.ajax({
+            url:'ingreso/reportes/list_ingreso.php',
+            data: parametros,
+         
+            success:function(data){
+            
+                $(".outer_div").html(data).fadeIn('slow');
+            
+            }
+        })
+    });
+}
+
+
+
+   $(document).ready(function(){
+        load72();
+
+
+    });
+
+    function load72(page){
+        $("#hasta").change(function(e){
+        e.preventDefault();  
+        $("#outer_div").empty();
+        var nombreTrabajador = $("#nombreTrabajador").val();
+        var desde = $("#desde").val();
+        var hasta = $("#hasta").val();
+        var id_user = $('#id_user').val();
+        var parametros = {"action":"ajax","page":page,"nombreTrabajador":nombreTrabajador,"desde":desde,"hasta":hasta};
+       
+        $.ajax({
+            url:'ingreso/reportes/list_ingreso.php',
+            data: parametros,
+         
+            success:function(data){
+            
+                $(".outer_div").html(data).fadeIn('slow');
+            
+            }
+        })
+    });
+}
+  */
+
+
+
