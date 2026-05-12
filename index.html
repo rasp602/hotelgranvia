@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Página de Prueba</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: inline-block;
+        }
+        h1 {
+            color: #007bff;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #mensaje {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Servidor Funcionando ✅</h1>
+        <p>Este es un archivo <strong>index.html</strong> de prueba.</p>
+        
+        <button onclick="mostrarMensaje()">Haz clic aquí</button>
+        <div id="mensaje"></div>
+    </div>
+
+    <script>
+        function mostrarMensaje() {
+            document.getElementById("mensaje").innerHTML = "¡JavaScript está funcionando correctamente!";
+        }
+    </script>
+
+</body>
+</html>
