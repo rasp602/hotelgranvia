@@ -35,7 +35,7 @@ if ($mysqli->connect_error)
 
 
     //$mysqli = new mysqli("190.101.222.6", "hotel", "chile2023$", "hoteleria");
-    $mysqli = new mysqli("193.203.175.238", "u854084565_rasp602", "Rodri2410$", "u854084565_hoteleria");
+    $mysqli = new mysqli("190.161.163.44", "hotel", "chile2023$", "asistencia");
     //$mysqli = new mysqli("152.172.39.88", "hotel", "chile2023$", "hoteleria");
 if ($mysqli->connect_error)
 {
@@ -44,7 +44,7 @@ if ($mysqli->connect_error)
 
     # conectare la base de datos
     //$con=@mysqli_connect('152.172.39.88', 'hotel', 'chile2023$', 'hoteleria');
-    $con=@mysqli_connect('193.203.175.238', 'u854084565_rasp602', 'Rodri2410$', 'u854084565_hoteleria');
+    $con=@mysqli_connect('190.161.163.44', 'hotel', 'chile2023$', 'asistencia');
 
     if(!$con){
         die("imposible conectar: ".mysqli_error($con));

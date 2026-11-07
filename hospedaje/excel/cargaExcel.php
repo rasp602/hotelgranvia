@@ -4,14 +4,14 @@
 	require '../../bd/conexionLocal.php';
 	
 
-    $nombresPersona = $_REQUEST['nombresPersona'];
+	$nombresPersona = $_REQUEST['nombresPersona'];
     $id_user = $_REQUEST['id_user'];
 
-   /* $descripcion = $_REQUEST["descripcion"];
+    $descripcion = $_REQUEST["descripcion"];
 	$idHotel = $_REQUEST["idHotel"];
 	$idHabitacion = $_REQUEST["idHabitacion"];
 	$idCama = $_REQUEST["idCama"];
-	$estado = $_REQUEST["estado"];*/
+	$estado = $_REQUEST["estado"];
 	$desde = $_REQUEST["desde"];
 	$hasta = $_REQUEST["hasta"];
 	$idEmpresa = $_REQUEST["idEmpresa"];
@@ -67,7 +67,7 @@ $sql ="SELECT
         INNER JOIN cama ON hospedaje.idCama=cama.idCama 
         INNER JOIN persona ON hospedaje.idPersona=persona.idPersona 
         INNER JOIN empresa ON persona.idEmpresa=empresa.idEmpresa        
-        ORDER by hospedaje.idHospedaje";
+        $where ORDER by hospedaje.idHospedaje";
 
 	//Consulta
 

@@ -814,27 +814,7 @@ public function ActualizarCamaError($data)
 		}
 	}
 
-public function EliminarResumenDiario($idHospedaje)
-{
-    try 
-    {
-        // Si viene como objeto, extraemos el idHospedaje
-        if (is_object($idHospedaje)) {
-            $idHospedaje = $idHospedaje->idHospedaje;
-        }
 
-        $sql = "DELETE FROM resumenhospedaje 
-                WHERE idHospedaje = ? 
-                AND fechaR = CURDATE()";
-
-        $stm = $this->pdo->prepare($sql);
-        $stm->execute([$idHospedaje]);
-
-    } catch (Exception $e) 
-    {
-        die($e->getMessage());
-    }
-}
 
 
 
