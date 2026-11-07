@@ -2,7 +2,7 @@
 error_reporting(E_ERROR | E_PARSE);
 
 require_once 'bd/conexionLocal.php';
-$sql_producto = "SELECT * FROM tipoProducto";
+$sql_producto = "SELECT * FROM tipoproducto";
 $result_producto = $conn->query($sql_producto);
 ?>
 
