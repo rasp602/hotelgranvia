@@ -1,145 +1,109 @@
 <?php
-    error_reporting(E_ERROR | E_PARSE); // Desactiva la notificación y warnings de error en php.
-?>
-<?php
-
-    $action = (isset($_REQUEST['action'])&& $_REQUEST['action'] !=NULL)?$_REQUEST['action']:'';
-    if($action == 'ajax'){
-        include 'pagination_producto.php'; //incluir el archivo de paginación
-
-        //las variables de paginación
-        $page = (isset($_REQUEST['page']) && !empty($_REQUEST['page']))?$_REQUEST['page']:1;
-        $per_page = 30; //la cantidad de registros que desea mostrar
-        $adjacents  = 4; //brecha entre páginas después de varios adyacentes
-        $offset = 10;
-       
-         $idHotel = $_REQUEST["idHotel"];
-  
-          include '../../bd/conexionLocal.php'; //incluir el archivo de conexion
-       
-$codigoBarra = $_REQUEST["codigoBarra"];
-$idTipoProducto = $_REQUEST["idTipoProducto"];
-$nombreProducto = $_REQUEST["nombreProducto"];
-
-$desde = $_REQUEST["desde"];
-$hasta = $_REQUEST["hasta"];
-$fecha1= Date('3000-01-01');
-
-$where="";
-if ($idTipoProducto!="") {
-    $where="where tipoproducto.idTipoProducto LIKE'%".$idTipoProducto."%'";
-
+if (($_REQUEST['action'] ?? '') !== 'ajax') {
+    return;
 }
 
-if ($idTipoProducto!="" && $desde!="" && $hasta!="") {
-    $where="where idTipoProducto LIKE'%".$idTipoProducto."%' AND fechaIngreso BETWEEN '".$desde."' AND '".$hasta."'";
- 
-}
-if ($nombreProducto!="") {
-    $where="where nombreProducto LIKE'%".$nombreProducto."%'";
+require __DIR__ . '/../../bd/conexionLocal.php';
 
-}
-if ($codigoBarra!="") {
-    $where="where codigoBarra LIKE'%".$codigoBarra."%'";
+try {
+    // Algunos archivos de conexión usan $con y otros usan $conn.
+    $db = $con ?? $conn ?? null;
 
-}
-
-if ($desde!="" && $hasta=="") {
-    $where="where fechaIngreso BETWEEN '".$desde."' AND '".$fecha1."'";
-
-}
-
-        $count_query1 = mysqli_query($con,"SELECT inventario.idInventario,inventario.fechaRegistro,inventario.horaRegistro,
-        inventario.cantRegistro,inventario.tipoRegistro,inventario.ultimoStock,producto.idProducto,producto.nombreProducto,producto.imagenProducto,producto.existenciaProducto,
-        producto.idTipoProducto,
-        count(*) AS numrows1 FROM inventario
-        INNER JOIN producto ON inventario.idProducto = producto.idProducto LIMIT 20");
-        
-            if ($row= mysqli_fetch_array($count_query1)){$numrows1 = $row['numrows1'];}
-            $total_pages = ceil($numrows1/$per_page);
-            $reload = 'index.php';
-    
-        //consulta principal para recuperar los datos
-
-        $query = mysqli_query($con,"SELECT inventario.idInventario,inventario.fechaRegistro,inventario.horaRegistro,
-        inventario.cantRegistro,inventario.tipoRegistro,inventario.ultimoStock,producto.idProducto,producto.nombreProducto,producto.existenciaProducto,
-        producto.idTipoProducto FROM inventario 
-        INNER JOIN producto ON inventario.idProducto = producto.idProducto
-        ORDER by inventario.idInventario desc LIMIT 20");
-
-    
-        
-        if (mysqli_num_rows($query) > 0){
-            ?>
-        <div class="container-fluid">
-            <div class="row">
-                <div class="table-responsive">
-        <table class="table table-condensed table-striped table-bordered table-hover" id="tabla">
-
-                            <thead>
-                                <tr class="bg-primary">
-                                <th>Fecha</th>
-                                <th>Hora</th> 
-                                <th>Descripción de Producto</th> 
-                                <th>Cantidad</th>                
-                                <th>Tipo de Registro</th> 
-                                <th>Stock</th>                                
-                                                             
-                    
-                                                                         
-                                </tr>
-                            </thead>
-            <tbody>
-                <br>
-            <?php
-                while($row = mysqli_fetch_array($query)){        
-                      ?>
-                <tr>      
-                       <td class=""><?php echo utf8_encode($row['fechaRegistro']);?></td>
-                       <td class=""><?php echo utf8_encode($row['horaRegistro']);?></td>
-                       <td class=""><?php echo utf8_encode($row['nombreProducto']);?></td>
-                       <td class="" align="center"><?php echo utf8_encode($row['cantRegistro']);?></td>                                         
-                       <td class="" align="center">
-                    
-                       <?php if ($row['tipoRegistro'] == "I"):
-                                            echo "Ingreso" ?>
-                                        <?php endif ?>
-
-                                        <?php if ($row['tipoRegistro'] == "E"):
-                                            echo "Egreso" ?>
-                                        <?php endif ?>
-                                    
-                                    </td>                        
-                       
-                       <td class="" align="center"><?php echo utf8_encode($row['ultimoStock']);?></td>                
-                    
-                       
-                      
-                </tr>
-            <?php
-             }
-            ?>
-            </tbody>
-        </table>
-        </div>
-        <?php echo "<div align='center'> <b>Total de Registros encontrados :</b>"; echo"&nbsp".$numrows1 ; echo "</div>"; ?>
-            </div>
-        </div>
-  
-        
-            <?php
-            
-        } else {
-            ?>
-            <div class="container"><br>
-            <div class="alert alert-danger alert-dismissable">
-              <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>    
-              <h4>Aviso!!!</h4> No hay datos para mostrar..!
-            </div>
-            </div>
-            <?php
-
-        }
+    if (!($db instanceof mysqli)) {
+        throw new RuntimeException(
+            'conexionLocal.php no proporcionó una conexión mysqli.'
+        );
     }
-    
+
+    if (!$db->set_charset('utf8mb4')) {
+        throw new RuntimeException($db->error);
+    }
+
+    $desdeTablas = "
+        FROM inventario AS i
+        INNER JOIN producto AS p ON p.idProducto = i.idProducto
+    ";
+
+    // El conteo no lleva columnas de detalle ni LIMIT.
+    $resultadoTotal = $db->query("
+        SELECT COUNT(*) AS total
+        $desdeTablas
+    ");
+
+    if ($resultadoTotal === false) {
+        throw new RuntimeException($db->error);
+    }
+
+    $total = (int) $resultadoTotal->fetch_assoc()['total'];
+
+    $movimientos = $db->query("
+        SELECT
+            i.fechaRegistro,
+            i.horaRegistro,
+            p.nombreProducto,
+            i.cantRegistro,
+            i.tipoRegistro,
+            i.ultimoStock
+        $desdeTablas
+        ORDER BY i.idInventario DESC
+        LIMIT 20
+    ");
+
+    if ($movimientos === false) {
+        throw new RuntimeException($db->error);
+    }
+} catch (Throwable $e) {
+    error_log('Listado de inventario: ' . $e->getMessage());
+    http_response_code(500);
+    echo '<div class="alert alert-danger">No se pudo consultar el inventario. Revisa el log de PHP.</div>';
+    return;
+}
+
+$esc = static function ($valor): string {
+    return htmlspecialchars(
+        (string) ($valor ?? '—'),
+        ENT_QUOTES | ENT_SUBSTITUTE,
+        'UTF-8'
+    );
+};
+
+$tipos = ['I' => 'Ingreso', 'E' => 'Egreso'];
 ?>
+
+<div class="container-fluid">
+    <?php if ($movimientos->num_rows > 0): ?>
+        <div class="table-responsive">
+            <table class="table table-condensed table-striped table-bordered table-hover" id="tabla">
+                <thead>
+                    <tr class="bg-primary">
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Descripción de Producto</th>
+                        <th>Cantidad</th>
+                        <th>Tipo de Registro</th>
+                        <th>Stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = $movimientos->fetch_assoc()): ?>
+                        <tr>
+                            <td><?= $esc($row['fechaRegistro']) ?></td>
+                            <td><?= $esc($row['horaRegistro']) ?></td>
+                            <td><?= $esc($row['nombreProducto']) ?></td>
+                            <td class="text-center"><?= $esc($row['cantRegistro']) ?></td>
+                            <td class="text-center">
+                                <?= $esc($tipos[$row['tipoRegistro']] ?? $row['tipoRegistro']) ?>
+                            </td>
+                            <td class="text-center"><?= $esc($row['ultimoStock']) ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+        </div>
+        <div class="text-center">
+            Mostrando <?= $movimientos->num_rows ?> de <?= $total ?> registros.
+        </div>
+    <?php else: ?>
+        <div class="alert alert-warning">No hay movimientos para mostrar.</div>
+    <?php endif; ?>
+</div>
