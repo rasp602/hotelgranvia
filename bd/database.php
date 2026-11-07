@@ -4,7 +4,7 @@ class Database
     public static function Conectar()
     {
         //$pdo = new PDO('mysql:host=152.172.39.88;dbname=hoteleria;charset=utf8', 'hotel', 'chile2023$');
-		$pdo = new PDO('mysql:host=srv1056.hstgr.io;dbname=u854084565_hoteleria;charset=utf8', 'u854084565_rasp602', 'Rodri2410$');
+		$pdo = new PDO('mysql:host=190.161.163.44;dbname=asistencia;charset=utf8', 'asistencia', 'chile2023$');
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);	
         return $pdo;
     }
