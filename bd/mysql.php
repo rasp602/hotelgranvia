@@ -23,7 +23,7 @@
 
     define("MYSQL_USER","hotel");
     define("MYSQL_PASS","chile2023$");
-    define("MYSQL_SERVER","190.161.163.44");
+    define("MYSQL_SERVER","10.0.3.1:3306");
     define("MYSQL_DATABASE","hoteleria");
 
     $conn = mysqli_connect(MYSQL_SERVER, MYSQL_USER, MYSQL_PASS, MYSQL_DATABASE);

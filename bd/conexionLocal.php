@@ -1,13 +1,13 @@
 <?php 
 //$mysqli = new mysqli("190.101.222.6", "hotel", "chile2023$", "hoteleria");
-$mysqli = new mysqli("190.161.163.44", "hotel", "chile2023$", "hoteleria");
+$mysqli = new mysqli("10.0.3.1:3306", "hotel", "chile2023$", "hoteleria");
 if ($mysqli->connect_error)
 {
 	die ('ERROR: No se establecio la conexion.'.mysqli_connect_error());
 }
 
  	# conectare la base de datos
-    $con=@mysqli_connect('190.161.163.44', 'hotel', 'chile2023$', 'hoteleria');
+    $con=@mysqli_connect('10.0.3.1:3306', 'hotel', 'chile2023$', 'hoteleria');
 
     if(!$con){
         die("imposible conectar: ".mysqli_error($con));
@@ -17,7 +17,7 @@ if ($mysqli->connect_error)
     }
 
 
-    $servername = "190.161.163.44";
+    $servername = "10.0.3.1:3306";
     $username = "hotel";
     $password = "chile2023$";
     $dbname = "hoteleria";
@@ -28,7 +28,7 @@ if ($mysqli->connect_error)
         die("Conexión fallida: " . $conn->connect_error);
     }
 
-    $servername = "190.161.163.44";
+    $servername = "10.0.3.1:3306";
     $username = "hotel";
     $password = "chile2023$";
     $dbname = "hoteleria";
@@ -47,7 +47,7 @@ if ($mysqli->connect_error)
         die(json_encode(['message' => "Conexión fallida: " . $conn->connect_error]));
     }
 
-    $conn = new mysqli("190.161.163.44", "hotel", "chile2023$", "hoteleria");
+    $conn = new mysqli("10.0.3.1:3306", "hotel", "chile2023$", "hoteleria");
 
     /* Comprobando si hay un error de conexión. */
     if ($conn->connect_error) {
