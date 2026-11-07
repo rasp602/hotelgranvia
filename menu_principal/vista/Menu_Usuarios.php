@@ -325,7 +325,13 @@ $fecha=date('Y-m-d');
               <li class="nav-item">
                 <a href="?c=producto&a=CrudIngreso" class="nav-link">
                   <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
-                  <p> Ingreso</p>
+                  <p> Ingreso con lector</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="?c=producto&a=CrudIngresoDescripcion" class="nav-link">
+                  <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
+                  <p> Ingreso Descripción</p>
                 </a>
               </li>
               <li class="nav-item">
@@ -339,13 +345,31 @@ $fecha=date('Y-m-d');
                 <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
                   <p> Egreso por unidad </p>
                 </a>
+              </li> 
+              <li class="nav-item">
+              <a href="?c=producto&a=Crud4" class="nav-link">
+                <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
+                  <p> Egreso varios </p>
+                </a>
+              </li>  
+              <li class="nav-item">
+              <a href="?c=producto&a=CrudEgresoDescripcion" class="nav-link">
+                <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
+                  <p> Egreso Descripción </p>
+                </a>
               </li>  
               <li class="nav-item">
                 <a href="javascript:reporteExcel();" class="nav-link">
                 <i class='far fa-file-alt' style='font-size:24px'></i>
                   <p>Inventario</p>
                 </a>
-              </li>            
+              </li>  
+              <li>
+                <a href="?c=producto&a=menuHistorialInventario">
+                <i class="bi bi-clock-history"></i>
+                <span>Historial Inventario</span>
+                  </a>
+              </li>          
               <li class="nav-item">
                 <a href="?c=producto&a=menuPedidos" class="nav-link">
                 <i class='far fa-file-alt' style='font-size:24px'></i>

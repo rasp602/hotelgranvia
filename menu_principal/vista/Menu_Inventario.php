@@ -128,6 +128,19 @@ $fecha=date('Y-m-d');
                 </a>
               </li>
               <li class="nav-item">
+                <a href="?c=producto&a=CrudIngreso" class="nav-link">
+                  <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
+                  <p> Ingreso con lector</p>
+                </a>
+              </li>
+
+              <li class="nav-item">
+                <a href="?c=producto&a=CrudIngresoDescripcion" class="nav-link">
+                  <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
+                  <p> Ingreso Descripción</p>
+                </a>
+              </li>
+              <li class="nav-item">
                 <a href="?c=producto&a=Crud" class="nav-link">
                   <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
                   <p> Ingreso por unidad</p>
@@ -137,6 +150,18 @@ $fecha=date('Y-m-d');
               <a href="?c=producto&a=Crud2" class="nav-link">
                 <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
                   <p> Egreso por unidad </p>
+                </a>
+              </li>  
+              <li class="nav-item">
+              <a href="?c=producto&a=Crud4" class="nav-link">
+                <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
+                  <p> Egreso varios </p>
+                </a>
+              </li>  
+                        <li class="nav-item">
+              <a href="?c=producto&a=CrudEgresoDescripcion" class="nav-link">
+                <i class='fa-solid fa-barcode' style='font-size:24px'> </i>
+                  <p> Egreso Descripción </p>
                 </a>
               </li>  
               <li class="nav-item">
@@ -151,6 +176,12 @@ $fecha=date('Y-m-d');
                   <p>Generar orden de entrega</p>
                 </a>
               </li>-->
+                           <li>
+                <a href="?c=producto&a=menuHistorialInventario">
+                <i class="bi bi-clock-history"></i>
+                <span>Historial Inventario</span>
+                  </a>
+              </li> 
               <li class="nav-item">
                 <a href="?c=producto&a=menuPedidos" class="nav-link">
                 <i class='far fa-file-alt' style='font-size:24px'></i>
@@ -181,48 +212,6 @@ $fecha=date('Y-m-d');
           </li> 
 
 
-    <!--MENU COMIDA--------------------------->
-    <li class="nav-item menu-open">            
-            <a href="#" class="nav-link active">
-              <i class="nav-icon fas fa-tachometer-alt"></i>
-              <p>
-              <p>COMIDAS</p>
-                <i class="right fas fa-angle-left"></i>
-              </p>
-            </a>
-            <ul class="nav nav-treeview">
-              
-            <li class="nav-item">
-                <a href="#" class="nav-link">
-
-
-              <i class="bi bi-bar-chart-line-fill"style='font-size:24px'></i>
-                  <p> Indicadores</p>
-                </a>
-              </li>
-
-            <li class="nav-item">
-                <a href="#" class="nav-link">
-                 <i class='fas fa-utensils' style='font-size:24px'></i>
-                  <p>Comidas</p>
-                </a>
-              </li>
-                        
-              <li class="nav-item">
-                <a href="#" class="nav-link">
-                 <i class='fas fa-pizza-slice' style='font-size:24px'></i>
-                  <p>Comidas Extras</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="#" class="nav-link">
-                 <i class='fas fa-pizza-slice' style='font-size:24px'></i>
-                  <p>Comidas Servidas H5</p>
-                </a>
-              </li>
-
-            </ul>
-          </li> 
 
 
 
