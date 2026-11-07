@@ -51,7 +51,6 @@ if ($action == 'ajax') {
         SELECT COUNT(*) AS numrows
         FROM ventas
         INNER JOIN hotel ON ventas.idHotel = hotel.idHotel
-        INNER JOIN tblusuario ON ventas.idUsuario = tblusuario.idUsuario
         $where
     ");
 
@@ -70,14 +69,11 @@ if ($action == 'ajax') {
             ventas.idHotel,
             ventas.tipoEntrega,
             hotel.nombreHotel,
-            tblusuario.nombre,
-            tblusuario.apellido,
+
             COALESCE(SUM(productos_ventas.cantidad), 0) AS total_productos
         FROM ventas
         INNER JOIN hotel 
             ON ventas.idHotel = hotel.idHotel
-        INNER JOIN tblusuario 
-            ON ventas.idUsuario = tblusuario.idUsuario
         LEFT JOIN productos_ventas 
             ON ventas.id = productos_ventas.idVenta
         $where
@@ -88,9 +84,7 @@ if ($action == 'ajax') {
             ventas.idUsuario,
             ventas.idHotel,
             ventas.tipoEntrega,
-            hotel.nombreHotel,
-            tblusuario.nombre,
-            tblusuario.apellido
+            hotel.nombreHotel
         ORDER BY ventas.id DESC
         LIMIT $offset, $per_page
     ");

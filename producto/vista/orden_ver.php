@@ -24,42 +24,173 @@ error_reporting(E_ERROR | E_PARSE);
 $id = isset($_REQUEST["id"]) ? intval($_REQUEST["id"]) : 0;
 
 $datosOrden = [];
+$productosEntrega = [];
+$productosSinStock = [];
+
+$totalCantidad = 0;
+$nombreHotel = "";
+$fechaOrden = "";
+$nombreSolicitante = "";
+$tipoEntrega = "";
 
 $query = mysqli_query($con, "
     SELECT 
         productos_ventas.cantidad,
+        productos_ventas.precio,
+
+        producto.idProducto,
         producto.nombreProducto,
         producto.codigoBarra,
+
         tipoproducto.nombreTipoProducto,
+
+        ventas.id AS idVenta,
         ventas.fecha,
         ventas.tipoEntrega,
+        ventas.estado,
+        ventas.idUsuario,
+        ventas.idHotel,
+
+        usuario.id_user,
+        usuario.usuario,
+
+        tblusuario.idUsuario AS idUsuarioPersona,
+        tblusuario.rut,
         tblusuario.nombre,
-        tblusuario.apellido
+        tblusuario.apellido,
+
+        hotel.idHotel AS idHotelOrden,
+        hotel.nombreHotel
+
     FROM productos_ventas
+
     INNER JOIN producto 
         ON productos_ventas.idProducto = producto.idProducto
-    INNER JOIN tipoproducto 
+
+    LEFT JOIN tipoproducto 
         ON producto.idTipoProducto = tipoproducto.idTipoProducto
+
     INNER JOIN ventas 
         ON productos_ventas.idVenta = ventas.id
-    INNER JOIN tblusuario 
-        ON ventas.idUsuario = tblusuario.idUsuario
+
+    LEFT JOIN usuario
+        ON ventas.idUsuario = usuario.idUsuario
+
+    LEFT JOIN tblusuario
+        ON usuario.idUsuario = tblusuario.idUsuario
+
+    LEFT JOIN hotel
+        ON ventas.idHotel = hotel.idHotel
+
     WHERE ventas.id = $id
 ");
 
 if ($query && mysqli_num_rows($query) > 0) {
+
     while ($row = mysqli_fetch_assoc($query)) {
         $datosOrden[] = $row;
     }
+
+    /*
+    =====================================================
+    TOTAL DE UNIDADES
+    =====================================================
+    */
+
     $totalCantidad = 0;
-foreach ($datosOrden as $item) {
-    $totalCantidad += (int)$item['cantidad'];
-}
+
+    foreach ($datosOrden as $item) {
+        // Se utiliza la cantidad GUARDADA, nunca el stock actual del producto.
+        if ((int)$item['cantidad'] === 0) {
+            $productosSinStock[] = $item;
+        } else {
+            $productosEntrega[] = $item;
+            $totalCantidad += (int)$item['cantidad'];
+        }
+    }
+
+    /*
+    =====================================================
+    DATOS GENERALES DE LA ORDEN
+    =====================================================
+    */
 
     $primero = $datosOrden[0];
-    $fechaOrden = !empty($primero["fecha"]) ? date("d-m-Y H:i", strtotime($primero["fecha"])) : "";
-    $nombreSolicitante = utf8_encode(trim($primero["nombre"] . " " . $primero["apellido"]));
-    $tipoEntrega = !empty($primero["tipoEntrega"]) ? utf8_encode($primero["tipoEntrega"]) : "No especificado";
+
+    /*
+    =====================================================
+    NOMBRE DEL HOTEL
+    =====================================================
+    */
+
+    if (!empty($primero["nombreHotel"])) {
+        $nombreHotel = utf8_encode(
+            trim($primero["nombreHotel"])
+        );
+    } else {
+        $nombreHotel = "Hotel no identificado";
+    }
+
+    /*
+    =====================================================
+    FECHA DE LA ORDEN
+    =====================================================
+    */
+
+    $fechaOrden = !empty($primero["fecha"])
+        ? date(
+            "d-m-Y H:i",
+            strtotime($primero["fecha"])
+        )
+        : "";
+
+    /*
+    =====================================================
+    NOMBRE DE QUIEN REALIZÓ / SOLICITÓ
+    =====================================================
+    */
+
+    $nombre = isset($primero["nombre"])
+        ? trim($primero["nombre"])
+        : "";
+
+    $apellido = isset($primero["apellido"])
+        ? trim($primero["apellido"])
+        : "";
+
+    $nombreSolicitante = trim(
+        $nombre . " " . $apellido
+    );
+
+    if ($nombreSolicitante != "") {
+        $nombreSolicitante = utf8_encode(
+            $nombreSolicitante
+        );
+    } else {
+
+        /*
+        Si todavía no existe relación con tblusuario,
+        mostramos el usuario del sistema.
+        */
+
+        if (!empty($primero["usuario"])) {
+            $nombreSolicitante = utf8_encode(
+                trim($primero["usuario"])
+            );
+        } else {
+            $nombreSolicitante = "Usuario no identificado";
+        }
+    }
+
+    /*
+    =====================================================
+    TIPO DE ENTREGA
+    =====================================================
+    */
+
+    $tipoEntrega = !empty($primero["tipoEntrega"])
+        ? utf8_encode($primero["tipoEntrega"])
+        : "No especificado";
 }
 ?>
 
@@ -219,12 +350,37 @@ foreach ($datosOrden as $item) {
         margin-top: 20px;
     }
 
+    .orden-sin-stock {
+        margin-top: 20px;
+        padding: 12px;
+        border: 1px solid #e7c487;
+        border-radius: 10px;
+        background: #fffaf0;
+    }
+    .orden-sin-stock h4 { color: #805000; }
+    .sin-stock-nota { font-size: 12px; color: #634b25; margin-bottom: 10px; }
+    .tabla-sin-stock { width: 100%; margin-bottom: 8px; }
+    .tabla-sin-stock th, .tabla-sin-stock td { padding: 8px; font-size: 13px; vertical-align: middle !important; }
+    .tabla-sin-stock thead { background: #fff0cc; color: #634000; }
+    .cantidad-sin-stock { display: inline-block; padding: 5px 10px; border: 1px solid #a16b19; border-radius: 18px; font-weight: bold; color: #805000; }
+    .estado-sin-stock { display: block; font-size: 11px; margin-top: 4px; color: #805000; font-weight: bold; }
+    .sin-stock-resumen { margin: 0; font-size: 12px; text-align: right; }
+
     @media print {
+        .orden-card { overflow: visible !important; }
+        .print-area .table-responsive { overflow: visible !important; }
+        .print-area thead { display: table-header-group; }
+        .print-area tr, .firma-area { break-inside: avoid; page-break-inside: avoid; }
+        .orden-sin-stock h4, .sin-stock-nota { break-after: avoid; page-break-after: avoid; }
+        .orden-sin-stock { background: #fff !important; border-color: #777; }
+        .tabla-sin-stock thead { background: #f0f0f0 !important; color: #000; }
+
         body * {
             visibility: hidden !important;
         }
 
-        .print-area, .print-area * {
+        .print-area,
+        .print-area * {
             visibility: visible !important;
         }
 
@@ -286,143 +442,397 @@ foreach ($datosOrden as $item) {
 </style>
 
 <div class="row orden-wrapper">
+
     <div class="col-md-2"></div>
 
     <div class="col-md-8 print-area">
+
         <?php if (isset($_GET["success"])) { ?>
+
             <div class="alert alert-info alert-custom no-print" role="alert">
                 Orden registrada correctamente.
             </div>
+
         <?php } ?>
 
+
         <?php if (isset($_GET["delete"])) { ?>
+
             <div class="alert alert-warning alert-custom no-print" role="alert">
                 Orden eliminada correctamente.
             </div>
+
         <?php } ?>
 
+
         <?php if (!empty($datosOrden)) { ?>
+
             <div class="orden-card">
 
+
+                <!-- CABECERA -->
+
                 <div class="orden-header">
-                    <h3><i class="bi bi-truck"></i> Orden de Entrega N° <?php echo $id; ?></h3>
-                    <div class="subtexto">Detalle de productos para impresión</div>
+
+                    <h3>
+                        <i class="bi bi-truck"></i>
+                        Orden de Entrega N° <?php echo $id; ?>
+                    </h3>
+
+                    <div class="subtexto">
+                        Detalle de productos para impresión
+                    </div>
+
                 </div>
+
+
+                <!-- BOTONES -->
 
                 <div class="acciones-orden no-print">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="window.history.back();">
-                        <i class="bi bi-arrow-left"></i> Volver
+
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        onclick="window.history.back();"
+                    >
+                        <i class="bi bi-arrow-left"></i>
+                        Volver
                     </button>
 
-                    <button type="button" class="btn btn-success btn-sm" onclick="window.print();">
-                        <i class="bi bi-printer"></i> Imprimir
+                    <button
+                        type="button"
+                        class="btn btn-success btn-sm"
+                        onclick="window.print();"
+                    >
+                        <i class="bi bi-printer"></i>
+                        Imprimir
                     </button>
+
                 </div>
+
+
+                <!-- INFORMACIÓN DE LA ORDEN -->
 
                 <div class="orden-info">
+
                     <div class="row">
-                        <div class="col-md-3 col-sm-6">
-                            <div class="info-box">
-                                <div class="titulo">N° Orden</div>
-                                <div class="valor"><?php echo $id; ?></div>
-                            </div>
-                        </div>
+
+
+                        <!-- NUMERO -->
 
                         <div class="col-md-3 col-sm-6">
+
                             <div class="info-box">
-                                <div class="titulo">Fecha</div>
-                                <div class="valor"><?php echo $fechaOrden; ?></div>
+
+                                <div class="titulo">
+                                    N° Orden
+                                </div>
+
+                                <div class="valor">
+                                    <?php echo $id; ?>
+                                </div>
+
                             </div>
+
                         </div>
 
-                        <div class="col-md-3 col-sm-6">
-                            <div class="info-box">
-                                <div class="titulo">Solicitado por</div>
-                                <div class="valor"><?php echo $nombreSolicitante; ?></div>
-                            </div>
-                        </div>
+
+                        <!-- FECHA -->
 
                         <div class="col-md-3 col-sm-6">
+
                             <div class="info-box">
-                                <div class="titulo">Tipo Entrega</div>
-                                <div class="valor"><?php echo $tipoEntrega; ?></div>
+
+                                <div class="titulo">
+                                    Fecha
+                                </div>
+
+                                <div class="valor">
+                                    <?php echo $fechaOrden; ?>
+                                </div>
+
                             </div>
+
                         </div>
+
+
+                        <!-- USUARIO -->
+
+                        <div class="col-md-3 col-sm-6">
+
+                            <div class="info-box">
+
+                                <div class="titulo">
+                                    Entregado por:
+                                </div>
+
+                                <div class="valor">
+                                    <?php echo $nombreSolicitante; ?>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- HOTEL -->
+
+                        <div class="col-md-3 col-sm-6">
+
+                            <div class="info-box">
+
+                                <div class="titulo">
+                                    Solicitado por:
+                                </div>
+
+                                <div class="valor">
+                                    <?php echo $nombreHotel; ?>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
                     </div>
+
                 </div>
 
+
+                <!-- PRODUCTOS -->
+
                 <div class="tabla-contenedor">
-                    <h4><i class="bi bi-box-seam"></i> Detalle de Productos</h4>
+
+                    <h4>
+                        <i class="bi bi-box-seam"></i>
+                        Productos para entrega
+                    </h4>
+
 
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover table-striped" id="tabla">
+
+                        <table
+                            class="table table-bordered table-hover table-striped"
+                            id="tabla"
+                        >
+
                             <thead>
+
                                 <tr>
-                                    <th style="width: 12%; text-align:center;">Cant.</th>
-                                    <th style="width: 58%;">Producto</th>
-                                    <th style="width: 30%;">Tipo</th>
+
+                                    <th style="width:12%; text-align:center;">
+                                        Cant.
+                                    </th>
+
+                                    <th style="width:58%;">
+                                        Producto
+                                    </th>
+
+                                    <th style="width:30%;">
+                                        Tipo
+                                    </th>
+
                                 </tr>
+
                             </thead>
+
+
                             <tbody>
-                                <?php foreach ($datosOrden as $row) { ?>
+
+                                <?php if (empty($productosEntrega)) { ?>
                                     <tr>
-                                        <td style="text-align:center;">
-                                            <span class="badge-cantidad">
-                                                <?php echo (int)$row['cantidad']; ?>
-                                            </span>
+                                        <td colspan="3" style="text-align:center; padding:16px;">
+                                            Esta orden no contiene unidades para entregar.
                                         </td>
-                                        <td>
-                                            <?php echo utf8_encode($row['nombreProducto']); ?>
-                                            <?php if (!empty($row['codigoBarra'])) { ?>
-                                                <span class="codigo-producto">
-                                                    Código: <?php echo utf8_encode($row['codigoBarra']); ?>
-                                                </span>
-                                            <?php } ?>
-                                        </td>
-                                        <td><?php echo utf8_encode($row['nombreTipoProducto']); ?></td>
                                     </tr>
                                 <?php } ?>
+
+                                <?php foreach ($productosEntrega as $row) { ?>
+
+                                    <tr>
+
+                                        <td style="text-align:center;">
+
+                                            <span class="badge-cantidad">
+
+                                                <?php
+                                                echo (int)$row['cantidad'];
+                                                ?>
+
+                                            </span>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <?php
+                                            echo utf8_encode(
+                                                $row['nombreProducto']
+                                            );
+                                            ?>
+
+                                            <?php if (!empty($row['codigoBarra'])) { ?>
+
+                                                <span class="codigo-producto">
+
+                                                    Código:
+
+                                                    <?php
+                                                    echo utf8_encode(
+                                                        $row['codigoBarra']
+                                                    );
+                                                    ?>
+
+                                                </span>
+
+                                            <?php } ?>
+
+                                        </td>
+
+
+                                        <td>
+
+                                            <?php
+                                            echo utf8_encode(
+                                                $row['nombreTipoProducto']
+                                            );
+                                            ?>
+
+                                        </td>
+
+                                    </tr>
+
+                                <?php } ?>
+
                             </tbody>
+
                         </table>
+
                     </div>
-<div style="
-    margin-top:12px;
-    padding:10px;
-    background:#f3fbf6;
-    border-radius:10px;
-    text-align:right;
-    font-weight:bold;
-">
-    <i class="bi bi-box-seam"></i> Total de productos: 
-    <span style="
-        background:#198754;
-        color:white;
-        padding:5px 12px;
-        border-radius:20px;
-        margin-left:5px;
-    ">
-        <?php echo $totalCantidad; ?>
-    </span>
-</div>
+
+
+                    <!-- TOTAL -->
+
+                    <div style="
+                        margin-top:12px;
+                        padding:10px;
+                        background:#f3fbf6;
+                        border-radius:10px;
+                        text-align:right;
+                        font-weight:bold;
+                    ">
+
+                        <i class="bi bi-box-seam"></i>
+
+                        Total de unidades para entrega:
+
+                        <span style="
+                            background:#198754;
+                            color:white;
+                            padding:5px 12px;
+                            border-radius:20px;
+                            margin-left:5px;
+                        ">
+
+                            <?php echo $totalCantidad; ?>
+
+                        </span>
+
+                    </div>
+
+
+                    <?php if (!empty($productosSinStock)) { ?>
+                    <section class="orden-sin-stock">
+                        <h4>Productos sin stock</h4>
+                        <p class="sin-stock-nota">
+                            Productos registrados en esta orden con cantidad 0.
+                            No se entregaron unidades ni se descontó inventario por estos productos.
+                        </p>
+                        <div class="table-responsive">
+                            <table class="table table-bordered tabla-sin-stock">
+                                <thead>
+                                    <tr>
+                                        <th style="width:12%;text-align:center;">Cant.</th>
+                                        <th style="width:58%;">Producto</th>
+                                        <th style="width:30%;">Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($productosSinStock as $rowSinStock) { ?>
+                                    <tr>
+                                        <td style="text-align:center;"><span class="cantidad-sin-stock">0</span></td>
+                                        <td>
+                                            <?php echo htmlspecialchars(utf8_encode($rowSinStock['nombreProducto']), ENT_QUOTES, 'UTF-8'); ?>
+                                            <?php if (!empty($rowSinStock['codigoBarra'])) { ?>
+                                            <span class="codigo-producto">Código: <?php echo htmlspecialchars(utf8_encode($rowSinStock['codigoBarra']), ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <?php } ?>
+                                            <span class="estado-sin-stock">Sin stock · No entregado</span>
+                                        </td>
+                                        <td><?php echo htmlspecialchars(utf8_encode((string)$rowSinStock['nombreTipoProducto']), ENT_QUOTES, 'UTF-8'); ?></td>
+                                    </tr>
+                                    <?php } ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="sin-stock-resumen">Productos sin stock: <strong><?php echo count($productosSinStock); ?></strong></p>
+                    </section>
+                    <?php } ?>
+
+                    <!-- FIRMA -->
+
                     <div class="firma-area">
+
                         <div class="firma-linea">
                             Firma de Recepción
                         </div>
+
                     </div>
+
+
                 </div>
 
             </div>
+
+
         <?php } else { ?>
+
+
             <div class="container sin-datos">
+
                 <div class="alert alert-danger alert-dismissable">
-                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-                    <h4><i class="bi bi-exclamation-triangle-fill"></i> Aviso</h4>
+
+                    <button
+                        type="button"
+                        class="close"
+                        data-dismiss="alert"
+                        aria-hidden="true"
+                    >
+                        &times;
+                    </button>
+
+                    <h4>
+
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+
+                        Aviso
+
+                    </h4>
+
                     No hay datos para mostrar para esta orden.
+
                 </div>
+
             </div>
+
+
         <?php } ?>
+
     </div>
 
+
     <div class="col-md-2"></div>
+
 </div>
+
 </div>

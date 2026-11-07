@@ -46,6 +46,19 @@ class productoController{
         }
         
         require_once 'includes/header_producto.php'; 
+        require_once 'producto/vista/producto_ingreso_varios_lector.php';
+        require_once 'includes/footer.php';
+   
+    }
+
+        public function CrudIngresoDescripcion(){
+        $vte = new Producto();
+        
+        if(isset($_REQUEST['idProducto'])){
+            $vte = $this->model->Obtener($_REQUEST['idProducto']);
+        }
+        
+        require_once 'includes/header_producto.php'; 
         require_once 'producto/vista/producto_ingreso_varios.php';
         require_once 'includes/footer.php';
    
@@ -64,6 +77,22 @@ class productoController{
    
     
 }
+
+    public function Crud4(){
+        $vte = new Producto();
+        
+        if(isset($_REQUEST['idProducto'])){
+            $vte = $this->model->Obtener($_REQUEST['idProducto']);
+        
+}
+        require_once 'includes/header_producto.php'; 
+        require_once 'producto/vista/producto_egreso_varios.php';
+        require_once 'includes/footer.php';
+   
+    
+}
+
+
         public function Crud1(){
         $vte = new Producto();
         
@@ -262,6 +291,80 @@ public function MarcarEntregado(){
     $this->model->MarcarEntregado($id);
     header("Location: ?c=producto&a=menuOrdenes");
 }
+
+public function menuHistorialInventario()
+{
+    $filtros = array(
+        'fechaDesde' => isset($_GET['fechaDesde']) ? trim($_GET['fechaDesde']) : '',
+        'fechaHasta' => isset($_GET['fechaHasta']) ? trim($_GET['fechaHasta']) : '',
+        'idUsuario'  => isset($_GET['idUsuario']) ? trim($_GET['idUsuario']) : '',
+        'tipo'       => isset($_GET['tipo']) ? trim($_GET['tipo']) : '',
+        'buscar'     => isset($_GET['buscar']) ? trim($_GET['buscar']) : '',
+        'pagina'     => isset($_GET['pagina']) ? max(1, (int)$_GET['pagina']) : 1
+    );
+
+    $movimientos = $this->model->ListarMovimientosInventario($filtros);
+
+    $usuariosInventario = $this->model->ListarUsuariosInventario();
+
+    $resumenInventario = $this->model->ResumenMovimientosInventario($filtros);
+
+    require_once 'includes/header_producto.php';
+    require_once 'producto/vista/inventario_historial.php';
+    require_once 'includes/footer.php';
+}
+    public function CrudEgresoDescripcion(){
+        $vte = new Producto();
+
+        if(isset($_REQUEST['idProducto'])){
+            $vte = $this->model->Obtener($_REQUEST['idProducto']);
+        }
+
+        require_once 'includes/header_producto.php';
+        require_once 'producto/vista/producto_egreso_descripcion.php';
+        require_once 'includes/footer.php';
+    }
+
+    public function ApiEgresoDescripcion()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
+        try {
+            if (empty($_SESSION['usuarioInventario']->idUsuario)) {
+                http_response_code(403);
+                throw new InvalidArgumentException('Debe iniciar sesión en inventario.');
+            }
+            $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
+            if ($accion === 'buscar') {
+                $resultado = array('success' => true, 'productos' => $this->model->BuscarProductosEgreso(isset($_POST['busqueda']) ? trim($_POST['busqueda']) : ''));
+            } elseif ($accion === 'ultimos') {
+                $resultado = array('success' => true, 'movimientos' => $this->model->UltimosEgresosDescripcion());
+            } elseif ($accion === 'egresar') {
+                $token = isset($_POST['token']) ? $_POST['token'] : '';
+                if (empty($_SESSION['csrfEgresoDescripcion']) || !is_string($token) || !hash_equals($_SESSION['csrfEgresoDescripcion'], $token)) {
+                    throw new InvalidArgumentException('Sesión vencida. Recargue la página.');
+                }
+                $id = isset($_POST['idProducto']) ? $_POST['idProducto'] : '';
+                $cantidad = isset($_POST['cantidad']) ? $_POST['cantidad'] : '';
+                if (filter_var($id, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1))) === false ||
+                    filter_var($cantidad, FILTER_VALIDATE_INT, array('options' => array('min_range' => 1))) === false) {
+                    throw new InvalidArgumentException('Seleccione un producto y una cantidad entera mayor que cero.');
+                }
+                $details = $this->model->EgresarPorDescripcion((int)$id, (int)$cantidad, (int)$_SESSION['usuarioInventario']->idUsuario);
+                $resultado = array('success' => true, 'message' => 'Egreso registrado correctamente.', 'details' => $details);
+            } else {
+                throw new InvalidArgumentException('Acción inválida.');
+            }
+            echo json_encode($resultado, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (InvalidArgumentException $e) {
+            echo json_encode(array('success' => false, 'message' => $e->getMessage()), JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
+        } catch (Exception $e) {
+            error_log('Egreso por descripción: ' . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(array('success' => false, 'message' => 'No se pudo completar la operación. Revise la conexión y el registro de errores.'));
+        }
+        exit;
+    }
 
 }
 

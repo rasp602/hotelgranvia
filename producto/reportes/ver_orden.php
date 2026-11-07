@@ -26,13 +26,13 @@ if ($action == 'ajax') {
        SELECT productos_ventas.id, productos_ventas.cantidad, productos_ventas.precio, productos_ventas.idProducto, productos_ventas.idVenta,
        producto.idProducto, producto.nombreProducto, producto.codigoBarra, producto.idTipoProducto,
        tipoproducto.idTipoProducto, tipoproducto.nombreTipoProducto,
-       ventas.id, ventas.fecha, ventas.total, ventas.idUsuario, ventas.idHotel, ventas.tipoEntrega, ventas.gananciaG,
-       tblusuario.idUsuario, tblusuario.nombre, tblusuario.apellido
+       ventas.id, ventas.fecha, ventas.total, ventas.idUsuario, ventas.idHotel, ventas.tipoEntrega, ventas.gananciaG
+     
        FROM `productos_ventas`
        INNER JOIN producto ON productos_ventas.idProducto = producto.idProducto
        INNER JOIN tipoproducto ON producto.idTipoProducto = tipoproducto.idTipoProducto
        INNER JOIN ventas ON productos_ventas.idVenta = ventas.id
-       INNER JOIN tblusuario ON ventas.idUsuario = tblusuario.idUsuario
+    
        WHERE ventas.id = $id
        LIMIT $offset, $per_page
     ");
@@ -52,7 +52,7 @@ if ($action == 'ajax') {
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <h6><i class="bi bi-person-circle"></i> Cliente:</h6>
-                                    <p><?php echo utf8_encode($row['nombre']) . " " . utf8_encode($row['apellido']); ?></p>
+                                  
                                 </div>
                                 <div class="col-md-6 text-right">
                                     <h6><i class="bi bi-calendar-check"></i> Fecha de la Orden:</h6>

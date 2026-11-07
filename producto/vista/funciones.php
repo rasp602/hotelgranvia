@@ -527,7 +527,7 @@ function editar($sentencia, $parametros ){
 }
 
 function conectarBaseDatos() {
-	$host = "190.101.222.6";
+	$host = "192.168.1.50";
 	$db   = "hoteleria";
 	$user = "hotel";
 	$pass = "chile2023$";
