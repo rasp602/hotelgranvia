@@ -31,8 +31,8 @@ if ($idTipoProducto!="") {
 
 }
 
-if ($tipoProducto!="" && $desde!="" && $hasta!="") {
-    $where="where tipoProducto LIKE'%".$tipoProducto."%' AND fechaIngreso BETWEEN '".$desde."' AND '".$hasta."'";
+if ($tipoproducto!="" && $desde!="" && $hasta!="") {
+    $where="where tipoProducto LIKE'%".$tipoproducto."%' AND fechaIngreso BETWEEN '".$desde."' AND '".$hasta."'";
  
 }
 if ($nombreProducto!="") {
