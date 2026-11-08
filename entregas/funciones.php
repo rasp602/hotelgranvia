@@ -288,30 +288,70 @@ function registrarVenta($productos, $idUsuario, $idHotel, $total,$tipoEntrega,$g
 }*/
 function registrarVenta($productos, $idUsuario, $idHotel, $total, $tipoEntrega, $gananciaG)
 {
-    $sentencia = "INSERT INTO ventas 
-        (fecha, total, idUsuario, idHotel, tipoEntrega, gananciaG) 
-        VALUES (?, ?, ?, ?, ?, ?)";
+    $bd = conectarBaseDatos();
+    $bd->beginTransaction();
 
-    $parametros = [
-        date("Y-m-d H:i:s"),
-        $total,
-        $idUsuario,
-        $idHotel,
-        $tipoEntrega,
-        $gananciaG
-    ];
+    try {
+        $ahora = new DateTimeImmutable('now', new DateTimeZone('America/Santiago'));
+        $venta = $bd->prepare(
+            'INSERT INTO ventas (fecha, total, idUsuario, idHotel, tipoEntrega, gananciaG)
+             VALUES (?, ?, ?, ?, ?, ?)'
+        );
+        $venta->execute([$ahora->format('Y-m-d H:i:s'), $total, $idUsuario, $idHotel, $tipoEntrega, $gananciaG]);
+        $idVenta = (int) $bd->lastInsertId();
+        if ($idVenta <= 0) {
+            throw new RuntimeException('No se pudo identificar la entrega creada.');
+        }
 
-    $resultadoVenta = insertar($sentencia, $parametros);
+        $detalle = $bd->prepare(
+            'INSERT INTO productos_ventas (idProducto, idVenta, cantidad, precio) VALUES (?, ?, ?, ?)'
+        );
+        $descontar = $bd->prepare(
+            'UPDATE producto SET existenciaProducto = existenciaProducto - ?
+             WHERE idProducto = ? AND existenciaProducto >= ?'
+        );
+        $consultarStock = $bd->prepare('SELECT existenciaProducto FROM producto WHERE idProducto = ?');
+        $movimiento = $bd->prepare(
+            'INSERT INTO inventario
+             (fechaRegistro, horaRegistro, idProducto, cantRegistro, tipoRegistro, ultimoStock, idUsuario)
+             VALUES (?, ?, ?, ?, ?, ?, ?)'
+        );
 
-    if ($resultadoVenta) {
-        $idVenta = obtenerUltimoIdVenta();
+        foreach ($productos as $producto) {
+            $datos = (array) $producto;
+            $id = filter_var($datos['idProducto'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            $cantidad = filter_var($datos['cantidad'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+            if ($id === false || $cantidad === false) {
+                throw new UnexpectedValueException('Producto o cantidad inválidos en la entrega.');
+            }
+            $precio = (float) ($datos['precioProducto'] ?? $datos['precioVenta'] ?? $datos['precio'] ?? 0);
 
-        $productosRegistrados = registrarProductosVenta($productos, $idVenta, $idUsuario);
+            if ($cantidad > 0) {
+                $descontar->execute([$cantidad, $id, $cantidad]);
+                if ($descontar->rowCount() !== 1) {
+                    throw new RuntimeException('Stock insuficiente o producto inexistente: ' . $id);
+                }
+                $consultarStock->execute([$id]);
+                $stock = (int) $consultarStock->fetchColumn();
+                $consultarStock->closeCursor();
+                $movimiento->execute([
+                    $ahora->format('Y-m-d'), $ahora->format('H:i:s'), $id,
+                    $cantidad, 'E', $stock, $idUsuario
+                ]);
+            }
 
-        return $resultadoVenta && $productosRegistrados;
+            // Los productos sin stock quedan visibles en la orden, sin movimiento.
+            $detalle->execute([$id, $idVenta, $cantidad, $precio]);
+        }
+
+        $bd->commit();
+        return true;
+    } catch (Throwable $e) {
+        if ($bd->inTransaction()) {
+            $bd->rollBack();
+        }
+        throw $e;
     }
-
-    return false;
 }
 
 
@@ -718,23 +758,30 @@ function editar($sentencia, $parametros ){
     return $respuesta->execute($parametros);
 }
 
-function conectarBaseDatos() {
-    $host = "10.0.3.1:3306";
-    $db   = "hoteleria";
-    $user = "hotel";
-    $pass = "chile2023$";
-    $charset = 'utf8mb4';
-
-    $options = [
-        \PDO::ATTR_ERRMODE            => \PDO::ERRMODE_EXCEPTION,
-        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_OBJ,
-        \PDO::ATTR_EMULATE_PREPARES   => false,
-    ];
-    $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
-    try {
-         $pdo = new \PDO($dsn, $user, $pass, $options);
-         return $pdo;
-    } catch (\PDOException $e) {
-         throw new \PDOException($e->getMessage(), (int)$e->getCode());
+function conectarBaseDatos()
+{
+    $host = '10.0.3.1';
+    $db   = 'hoteleria';
+    $user = 'hotel';
+    $pass = getenv('HOTEL_DB_PASSWORD');
+    // Si no configuras la variable de entorno, coloca aquí la clave real de hotel_app.
+    if ($pass === false || $pass === '') {
+        $pass = 'chile2023$'; // Completar en el VPS.
     }
+
+    if ($pass === '') {
+        throw new RuntimeException('Falta configurar la contraseña MySQL de hotel_app en entregas/funciones.php.');
+    }
+
+    return new PDO(
+        "mysql:host=$host;port=3306;dbname=$db;charset=utf8mb4",
+        $user,
+        $pass,
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
 }
+
