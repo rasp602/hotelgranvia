@@ -2,6 +2,7 @@
 
         <?php 
         $usuario = null;
+        $usuarioRegistro = 0;
         if (isset($_SESSION["usuarioInventario"])) {
             $usuario = $_SESSION["usuarioInventario"];
             if ($usuario->nivel == "U") {
@@ -99,7 +100,7 @@
                                         </div>
 
                                         <div class="form-group" style="margin-top:15px;">
-                                            <label for="quantityInput">Cantidad a ingresar</label>
+                                            <label for="quantityInput">Cantidad de unidades a ingresar</label>
                                             <input 
                                                 type="number" 
                                                 id="quantityInput" 
@@ -109,6 +110,24 @@
                                                 required 
                                                 min="1"
                                             >
+                                        </div>
+
+                                        <div class="form-group" style="margin-top:15px;">
+                                            <label for="ingresoPorCaja">
+                                                <input type="checkbox" id="ingresoPorCaja">
+                                                Ingreso por cajas
+                                            </label>
+                                        </div>
+
+                                        <div id="opcionesCaja" class="form-group" style="display:none;">
+                                            <label for="unidadesPorCaja">Unidades por caja</label>
+                                            <input type="number" id="unidadesPorCaja"
+                                                   class="form-control" min="1" step="1" value="1" disabled>
+                                            <small>Se aplica solo a este ingreso.</small>
+                                        </div>
+
+                                        <div id="resumenCaja" style="display:none;" aria-live="polite">
+                                            Total a ingresar: <strong id="totalIngresoCaja">—</strong>
                                         </div>
 
                                         <div style="margin-top:18px;">
@@ -239,9 +258,37 @@
                 $("#productCode").text('');
             }
 
+            function calcularIngreso(cantidad, porCaja, unidadesPorCaja) {
+                const entero = valor => /^\d+$/.test(String(valor)) &&
+                    Number.isSafeInteger(Number(valor)) && Number(valor) > 0;
+                if (!entero(cantidad) || (porCaja && !entero(unidadesPorCaja))) {
+                    return null;
+                }
+                const total = Number(cantidad) * (porCaja ? Number(unidadesPorCaja) : 1);
+                return Number.isSafeInteger(total) && total <= 2147483647 ? total : null;
+            }
+
+            function actualizarIngresoPorCaja() {
+                const porCaja = $("#ingresoPorCaja").prop("checked");
+                const total = calcularIngreso($("#quantityInput").val(), porCaja, $("#unidadesPorCaja").val());
+                $('label[for="quantityInput"]').text(porCaja
+                    ? "Cantidad de cajas a ingresar"
+                    : "Cantidad de unidades a ingresar");
+                $("#opcionesCaja, #resumenCaja").toggle(porCaja);
+                $("#unidadesPorCaja").prop("disabled", !porCaja);
+                $("#totalIngresoCaja").text(total === null ? "—" : total + " unidades");
+            }
+
+            $("#ingresoPorCaja").on("change", actualizarIngresoPorCaja);
+            $("#quantityInput, #unidadesPorCaja").on("input", actualizarIngresoPorCaja);
+            actualizarIngresoPorCaja();
+
             function limpiarFormularioCompleto() {
                 $("#productBarcode").val('');
                 $("#quantityInput").val('');
+                $("#ingresoPorCaja").prop("checked", false);
+                $("#unidadesPorCaja").val("1");
+                actualizarIngresoPorCaja();
                 limpiarProductoDetectado();
 
                 setTimeout(function() {
@@ -354,7 +401,10 @@
 
             $("#addButton").click(function() {
                 let codigoBarra = $("#barcodeScanned").val().trim();
-                let cantidad = parseInt($("#quantityInput").val(), 10);
+                const cajasOUnidades = $("#quantityInput").val();
+                const porCaja = $("#ingresoPorCaja").prop("checked");
+                const unidadesPorCaja = $("#unidadesPorCaja").val();
+                const cantidad = calcularIngreso(cajasOUnidades, porCaja, unidadesPorCaja);
 
                 if (!codigoBarra) {
                     mostrarMensaje("Primero debe escanear o escribir un producto válido.", "error");
@@ -362,12 +412,15 @@
                     return;
                 }
 
-                if (!cantidad || isNaN(cantidad) || cantidad <= 0) {
-                    mostrarMensaje("Ingrese una cantidad válida mayor a 0.", "error");
+                if (cantidad === null) {
+                    mostrarMensaje(porCaja
+                        ? "Ingrese cantidades enteras positivas para cajas y unidades por caja. Revise el total."
+                        : "Ingrese una cantidad entera positiva válida.", "error");
                     $("#quantityInput").focus();
                     return;
                 }
 
+                $("#addButton").prop("disabled", true);
                 $.ajax({
                     url: 'sumar_product_varios.php',
                     type: 'POST',
@@ -433,6 +486,9 @@
 
                         mostrarMensaje("Error al actualizar el producto.", "error");
                         limpiarFormularioCompleto();
+                    },
+                    complete: function() {
+                        $("#addButton").prop("disabled", false);
                     }
                 });
             });
