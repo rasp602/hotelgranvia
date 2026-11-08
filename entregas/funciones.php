@@ -719,7 +719,7 @@ function editar($sentencia, $parametros ){
 }
 
 function conectarBaseDatos() {
-    $host = "localhost";
+    $host = "10.0.3.1:3306";
     $db   = "hoteleria";
     $user = "hotel";
     $pass = "chile2023$";
