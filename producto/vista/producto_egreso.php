@@ -2,6 +2,9 @@
 
 <?php 
 $usuario = null;
+if (!empty($_SESSION["usuarioInventario"]->idUsuario) && empty($_SESSION['csrfEgresoLector'])) {
+    $_SESSION['csrfEgresoLector'] = bin2hex(random_bytes(32));
+}
 if (isset($_SESSION["usuarioInventario"])) {
     $usuario = $_SESSION["usuarioInventario"];
 
@@ -257,7 +260,7 @@ if (isset($_SESSION["usuarioInventario"])) {
         <div class="stock-card">
             <div class="stock-header">
                 <h2><i class="bi bi-qr-code-scan"></i> Egreso de Stock por Escáner</h2>
-                <p>Escanea el código y descuenta productos del inventario de forma rápida.</p>
+                <p>Cada lectura válida descuenta una unidad del inventario.</p>
             </div>
 
             <div class="stock-body">
@@ -277,7 +280,7 @@ if (isset($_SESSION["usuarioInventario"])) {
                         </div>
                     </form>
 
-                    <div id="result"></div>
+                    <div id="result" role="status" aria-live="polite"></div>
 
                     <div id="ultimoProductoBox" class="ultimo-producto-box">
                         <div class="titulo-modulo" style="font-size:20px; margin-bottom:15px;">
@@ -329,74 +332,68 @@ if (isset($_SESSION["usuarioInventario"])) {
 </div>
 
 <script>
-$(document).ready(function() {
-    let inputBuffer = '';
+$(function () {
+    const entrada = $("#productBarcode");
+    const token = <?= json_encode($_SESSION['csrfEgresoLector'] ?? '') ?>;
+    const imagenDefault = "img/no-image.png";
     let timer;
+    let enviando = false;
 
-    const RUTA_IMAGENES = 'img/productos/';
-    const RUTA_DEFAULT = 'img/no-image.png';
-
-    function construirRutaImagen(nombreArchivo) {
-        if (!nombreArchivo || String(nombreArchivo).trim() === '') {
-            return RUTA_DEFAULT;
-        }
-        return RUTA_IMAGENES + String(nombreArchivo).trim();
+    function mensaje(texto, ok) {
+        $("#result").empty().append(
+            $("<div>").addClass("mensaje-resultado " + (ok ? "mensaje-ok" : "mensaje-error")).text(texto)
+        );
     }
 
-    function mostrarMensaje(texto, tipo) {
-        let clase = (tipo === 'ok') ? 'mensaje-resultado mensaje-ok' : 'mensaje-resultado mensaje-error';
-        $("#result").html('<div class="' + clase + '">' + texto + '</div>');
-    }
-
-    function limpiarEntrada() {
-        $("#productBarcode").val('');
-        $("#productBarcode").focus();
-        inputBuffer = '';
-    }
-
-    $("#productBarcode").focus();
-
-    $(document).on('keypress', function(e) {
-        inputBuffer += String.fromCharCode(e.which);
-
-        if (timer) {
-            clearTimeout(timer);
+    function egresar() {
+        clearTimeout(timer);
+        const codigo = entrada.val().trim();
+        if (!codigo || enviando) return;
+        if (!token) {
+            mensaje("Inicia sesión en inventario y vuelve a abrir el módulo.", false);
+            return;
         }
 
-        timer = setTimeout(function() {
-            if (inputBuffer.length > 0) {
-                $.ajax({
-                    url: 'restar_product.php',
-                    type: 'POST',
-                    data: { codigoBarra: inputBuffer },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.success) {
-                            mostrarMensaje(response.message, 'ok');
-                        } else {
-                            mostrarMensaje(response.message || 'No se pudo egresar el producto.', 'error');
-                        }
+        enviando = true;
+        entrada.val("").prop("readonly", true);
+        mensaje("Registrando salida de una unidad…", true);
 
-                        if (response.details) {
-                            let imagen = construirRutaImagen(response.details.imagenProducto);
+        $.ajax({
+            url: "restar_product_lector.php",
+            type: "POST",
+            dataType: "json",
+            data: {codigoBarra: codigo, token: token}
+        }).done(function (r) {
+            mensaje(r.message || "No se pudo registrar el egreso.", r.success === true);
+            if (!r.success || !r.details) return;
+            const d = r.details;
+            const imagen = String(d.imagenProducto || "").trim();
+            $("#productImage").attr("src", imagen ? "img/productos/" + encodeURIComponent(imagen) : imagenDefault);
+            $("#productName").text(d.nombre || "");
+            $("#productBarcodeText").text(d.codigoBarra || codigo);
+            $("#currentStock").text(d.newExistencia);
+            $("#ultimoProductoBox").show();
+        }).fail(function () {
+            mensaje("No se pudo confirmar la salida. Revisa el historial antes de escanear otra vez.", false);
+        }).always(function () {
+            enviando = false;
+            entrada.prop("readonly", false).focus();
+        });
+    }
 
-                            $("#productImage").attr('src', imagen);
-                            $("#productName").text(response.details.nombre || '');
-                            $("#productBarcodeText").text(response.details.codigoBarra || '');
-                            $("#currentStock").text(response.details.newExistencia || '0');
-                            $("#ultimoProductoBox").show();
-                        }
-
-                        limpiarEntrada();
-                    },
-                    error: function(xhr, status, error) {
-                        console.error(xhr);
-                        mostrarMensaje('Error al egresar el producto.', 'error');
-                        limpiarEntrada();
-                    }
-                });
-            }
-        }, 120);
+    entrada.on("keydown", function (e) {
+        if (e.key === "Enter" || e.keyCode === 13 ||
+            ((e.key === "Tab" || e.keyCode === 9) && entrada.val().trim() !== "")) {
+            e.preventDefault();
+            egresar();
+        }
     });
+
+    entrada.on("input", function () {
+        clearTimeout(timer);
+        if (entrada.val().trim()) timer = setTimeout(egresar, 450);
+    });
+
+    entrada.focus();
 });
 </script>
