@@ -1,138 +1,175 @@
 <?php
+
 session_start();
-include_once "funciones.php";
+
+$redirigir = static function (string $destino, string $tipo, string $texto): void {
+    $_SESSION['mensaje_venta'] = [
+        'tipo' => $tipo,
+        'texto' => $texto,
+    ];
+
+    header('Location: ' . $destino, true, 303);
+    exit;
+};
 
 if (empty($_SESSION['usuario'])) {
-    $_SESSION['mensaje_venta'] = [
-        'tipo' => 'warning',
-        'texto' => 'Tu sesión no está activa. Debes iniciar sesión nuevamente.'
-    ];
-    header("Location: login.php");
-    exit;
+    $redirigir(
+        'login.php',
+        'warning',
+        'Tu sesión no está activa. Debes iniciar sesión nuevamente.'
+    );
 }
 
-if (!isset($_SESSION['clienteVenta']) || empty($_SESSION['clienteVenta'])) {
-    $_SESSION['mensaje_venta'] = [
-        'tipo' => 'warning',
-        'texto' => 'Debes seleccionar un lugar de entrega antes de terminar la orden.'
-    ];
-    header("Location: vender.php");
-    exit;
+$idHotel = filter_var(
+    $_SESSION['clienteVenta'] ?? null,
+    FILTER_VALIDATE_INT,
+    ['options' => ['min_range' => 1]]
+);
+
+if ($idHotel === false) {
+    $redirigir(
+        'vender.php',
+        'warning',
+        'Debes seleccionar un lugar de entrega antes de terminar la orden.'
+    );
 }
 
-if (!isset($_SESSION['lista']) || empty($_SESSION['lista'])) {
-    $_SESSION['mensaje_venta'] = [
-        'tipo' => 'warning',
-        'texto' => 'No hay productos en la orden de entrega.'
-    ];
-    header("Location: vender.php");
-    exit;
+$productos = $_SESSION['lista'] ?? [];
+
+if (!is_array($productos) || $productos === []) {
+    $redirigir(
+        'vender.php',
+        'warning',
+        'No hay productos en la orden de entrega.'
+    );
 }
 
-date_default_timezone_set("America/Santiago");
+date_default_timezone_set('America/Santiago');
 
+$etapa = 'cargar funciones';
+$guardadoIniciado = false;
 
-function obtenerUsuarioSesion($usuarioSesion) {
+try {
+    require_once __DIR__ . '/funciones.php';
 
-    // 🔥 CASO 1: viene como objeto
-    if (is_object($usuarioSesion)) {
-        if (isset($usuarioSesion->idUsuario) && (int)$usuarioSesion->idUsuario > 0) {
-            return $usuarioSesion;
+    $etapa = 'identificar usuario de sesión';
+    $sesion = $_SESSION['usuario'];
+
+    $usuario = is_object($sesion)
+        ? get_object_vars($sesion)
+        : (is_array($sesion) ? $sesion : []);
+
+    $idUsuario = (int) ($usuario['idUsuario'] ?? 0);
+
+    if ($idUsuario <= 0) {
+        $nombreUsuario = is_string($sesion)
+            ? trim($sesion)
+            : trim((string) ($usuario['usuario'] ?? ''));
+
+        if ($nombreUsuario === '') {
+            $nombreUsuario = trim((string) ($usuario['nombre'] ?? ''));
         }
 
-        if (isset($usuarioSesion->usuario)) {
-            return obtenerUsuarioPorNombre($usuarioSesion->usuario);
-        }
+        if ($nombreUsuario !== '') {
+            if (!function_exists('obtenerUsuarioPorNombre')) {
+                throw new RuntimeException(
+                    'funciones.php no define obtenerUsuarioPorNombre().'
+                );
+            }
 
-        if (isset($usuarioSesion->nombre)) {
-            return obtenerUsuarioPorNombre($usuarioSesion->nombre);
+            $encontrado = obtenerUsuarioPorNombre($nombreUsuario);
+
+            if (is_object($encontrado)) {
+                $idUsuario = (int) ($encontrado->idUsuario ?? 0);
+            } elseif (is_array($encontrado)) {
+                $idUsuario = (int) ($encontrado['idUsuario'] ?? 0);
+            }
         }
     }
 
-    // 🔥 CASO 2: viene como array
-    if (is_array($usuarioSesion)) {
-        if (isset($usuarioSesion['idUsuario']) && (int)$usuarioSesion['idUsuario'] > 0) {
-            return (object)$usuarioSesion;
-        }
-
-        if (isset($usuarioSesion['usuario'])) {
-            return obtenerUsuarioPorNombre($usuarioSesion['usuario']);
-        }
-
-        if (isset($usuarioSesion['nombre'])) {
-            return obtenerUsuarioPorNombre($usuarioSesion['nombre']);
-        }
+    if ($idUsuario <= 0) {
+        $redirigir(
+            'vender.php',
+            'error',
+            'No se pudo identificar al usuario de la entrega. Vuelve a iniciar sesión.'
+        );
     }
 
-    // 🔥🔥🔥 CASO 3: viene como string (TU CASO)
-    if (is_string($usuarioSesion) && !empty($usuarioSesion)) {
-        return obtenerUsuarioPorNombre($usuarioSesion);
+    $etapa = 'calcular total de la orden';
+    $total = 0.0;
+    $gananciaG = 0.0;
+
+    foreach ($productos as $producto) {
+        $datos = is_object($producto) ? get_object_vars($producto) : $producto;
+
+        if (!is_array($datos)) {
+            throw new UnexpectedValueException('La orden contiene un producto inválido.');
+        }
+
+        $cantidad = filter_var(
+            $datos['cantidad'] ?? 1,
+            FILTER_VALIDATE_INT,
+            ['options' => ['min_range' => 0]]
+        );
+
+        if ($cantidad === false) {
+            throw new UnexpectedValueException('La orden contiene una cantidad inválida.');
+        }
+
+        $precio = (float) (
+            $datos['precioProducto']
+            ?? $datos['precioVenta']
+            ?? $datos['precio']
+            ?? 0
+        );
+
+        $compra = (float) ($datos['precioCompra'] ?? 0);
+
+        $total += $cantidad * $precio;
+        $gananciaG += $cantidad * ($precio - $compra);
     }
 
-    return null;
-}
-
-function obtenerPrecioProductoEntrega($producto) {
-    if (isset($producto->precioProducto)) return (float)$producto->precioProducto;
-    if (isset($producto->precioVenta)) return (float)$producto->precioVenta;
-    if (isset($producto->precio)) return (float)$producto->precio;
-    return 0;
-}
-
-$usuarioSesion = obtenerUsuarioSesion($_SESSION['usuario']);
-$idUsuario = ($usuarioSesion && isset($usuarioSesion->idUsuario)) ? (int)$usuarioSesion->idUsuario : 0;
-
-$idHotel = (int)$_SESSION['clienteVenta'];
-$productos = $_SESSION['lista'];
-
-if ($idUsuario <= 0) {
-    $debugUsuario = '';
-
-    if (is_object($_SESSION['usuario']) || is_array($_SESSION['usuario'])) {
-        $debugUsuario = json_encode($_SESSION['usuario'], JSON_UNESCAPED_UNICODE);
-    } else {
-        $debugUsuario = (string)$_SESSION['usuario'];
+    $etapa = 'registrar orden';
+    if (!function_exists('registrarVenta')) {
+        throw new RuntimeException('funciones.php no define registrarVenta().');
     }
 
-    $_SESSION['mensaje_venta'] = [
-        'tipo' => 'error',
-        'texto' => 'No se pudo identificar el usuario que registra la entrega. Sesión usuario: ' . $debugUsuario
-    ];
-    header("Location: vender.php");
-    exit;
-}
+    $guardadoIniciado = true;
+    $resultado = registrarVenta(
+        $productos,
+        $idUsuario,
+        $idHotel,
+        $total,
+        'ENTREGA',
+        $gananciaG
+    );
 
-$total = 0;
-$gananciaG = 0;
+    if (!$resultado) {
+        throw new RuntimeException('registrarVenta() devolvió un resultado falso o vacío.');
+    }
 
-foreach ($productos as $producto) {
-    $cantidad = isset($producto->cantidad) ? (int)$producto->cantidad : 1;
-    $precio = obtenerPrecioProductoEntrega($producto);
-    $compra = isset($producto->precioCompra) ? (float)$producto->precioCompra : 0;
-
-    $total += ($cantidad * $precio);
-    $gananciaG += ($cantidad * ($precio - $compra));
-}
-
-$tipoEntrega = "ENTREGA";
-
-$resultado = registrarVenta($productos, $idUsuario, $idHotel, $total, $tipoEntrega, $gananciaG);
-
-if ($resultado) {
     $_SESSION['lista'] = [];
     unset($_SESSION['clienteVenta']);
 
-    $_SESSION['mensaje_venta'] = [
-        'tipo' => 'success',
-        'texto' => 'La orden de entrega fue registrada correctamente.'
-    ];
-} else {
-    $_SESSION['mensaje_venta'] = [
-        'tipo' => 'error',
-        'texto' => 'No se pudo registrar la orden de entrega.'
-    ];
-}
+    $redirigir(
+        'vender.php',
+        'success',
+        'La orden de entrega fue registrada correctamente.'
+    );
 
-header("Location: vender.php");
-exit;
-?>
+} catch (Throwable $e) {
+    error_log(sprintf(
+        '[registrar_venta] Etapa: %s | %s: %s | %s:%d',
+        $etapa,
+        get_class($e),
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    ));
+
+    $mensaje = $guardadoIniciado
+        ? 'No se pudo confirmar la entrega. Revisa el historial antes de volver a guardarla.'
+        : 'No se pudo preparar la entrega. La orden se conservó.';
+
+    $redirigir('vender.php', 'error', $mensaje);
+}
