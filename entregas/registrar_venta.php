@@ -132,7 +132,7 @@ if ($resultado) {
         'texto' => 'No se pudo registrar la orden de entrega.'
     ];
 }
-
-header("Location: vender.php");
+/*
+header("Location: vender.php");*/
 exit;
 ?>
