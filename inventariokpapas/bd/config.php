@@ -7,7 +7,7 @@
 
 
 /* Creando una nueva conexión a la base de datos. */
-$conn = new mysqli("localhost", "kpapas", "chile2023$", "kpapas");
+$conn = new mysqli("10.0.3.1:3306", "kpapas", "chile2023$", "kpapas");
 
 /* Comprobando si hay un error de conexión. */
 if ($conn->connect_error) {
