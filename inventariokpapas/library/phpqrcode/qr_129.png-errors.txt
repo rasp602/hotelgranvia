@@ -1,0 +1,18 @@
+2022-11-10 21:49:51: <br />
+<b>Notice</b>:  Trying to access array offset on value of type int in <b>C:\xampp\htdocs\AdminLTE-3.2.0\library\phpqrcode\qrsplit.php</b> on line <b>71</b><br />
+<br />
+<b>Notice</b>:  Trying to access array offset on value of type int in <b>C:\xampp\htdocs\AdminLTE-3.2.0\library\phpqrcode\qrsplit.php</b> on line <b>53</b><br />
+<br />
+<b>Notice</b>:  Trying to access array offset on value of type int in <b>C:\xampp\htdocs\AdminLTE-3.2.0\library\phpqrcode\qrsplit.php</b> on line <b>62</b><br />
+<br />
+<b>Notice</b>:  Trying to access array offset on value of type int in <b>C:\xampp\htdocs\AdminLTE-3.2.0\library\phpqrcode\qrsplit.php</b> on line <b>71</b><br />
+<br />
+<b>Notice</b>:  Trying to access array offset on value of type int in <b>C:\xampp\htdocs\AdminLTE-3.2.0\library\phpqrcode\qrsplit.php</b> on line <b>53</b><br />
+<br />
+<b>Notice</b>:  Trying to access array offset on value of type int in <b>C:\xampp\htdocs\AdminLTE-3.2.0\library\phpqrcode\qrsplit.php</b> on line <b>62</b><br />
+<br />
+<b>Notice</b>:  Trying to access array offset on value of type int in <b>C:\xampp\htdocs\AdminLTE-3.2.0\library\phpqrcode\qrsplit.php</b> on line <b>71</b><br />
+<br />
+<b>Notice</b>:  Trying to access array offset on value of type int in <b>C:\xampp\htdocs\AdminLTE-3.2.0\library\phpqrcode\qrsplit.php</b> on line <b>53</b><br />
+<br />
+<b>Notice</b>:  Trying to access array offset on value of type int in <b>C:\xampp\htdocs\AdminLTE-3.2.0\library\phpqrcode\qrsplit.php</b> on line <b>62</b><br />

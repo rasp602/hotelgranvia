@@ -1,0 +1,174 @@
+<?php
+	error_reporting(E_ERROR | E_PARSE); // Desactiva la notificación y warnings de error en php.
+  $hora=date("h:s:m");
+  echo $hora;
+?>
+
+<!-- Include Date Range Picker -->
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/js/bootstrap-datepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.4.1/css/bootstrap-datepicker3.css"/>
+
+<script>
+function subirimagen()
+{
+  self.name = 'opener';
+  remote = open('actividad/vista/gestionimagen.php', 'remote', 'width=600,height=200,location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,fullscreen=yes, status=yes');
+  remote.focus();
+  }
+  function subirimagen2()
+{
+  self.name = 'opener';
+  remote = open('actividad/vista/gestionimagen2.php', 'remote', 'width=600,height=200,location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,fullscreen=yes, status=yes');
+  remote.focus();
+  }
+</script>
+
+<script>
+    $(document).ready(function(){
+        var date_input=$('input[name="fechaA"]'); //our date input has the name "date"
+        var container=$('.bootstrap-iso form').length>0 ? $('.bootstrap-iso form').parent() : "body";
+        date_input.datepicker({
+            format: 'yyyy/mm/dd',
+            container: container,
+            todayHighlight: true,
+            autoclose: true,
+        })
+    })
+</script>       
+
+<div class="container-fluid fondoInscripcion">
+  <?php include_once 'menu_principal/vista/Menu_Usuarios.php'; ?>   
+  <?php $cliente=$usuario->id_user;?>        
+
+              <div class="col-md-12">
+                  <form id="form1" action="?c=actividad&a=Guardar" name="form1" method="post" enctype="multipart/form-data">
+                    <input type="hidden" class="form-control" id="idActividad" name="idActividad" value="<?php echo $vte->idActividad;?>"> 
+                   <!-- <input type="hidden" class="form-control" id="fechaA" name="fechaA" placeholder="fechaA" value="<?php echo date("Y-m-d");?>">-->
+                    <input type="text" class="form-control" id="horaA" name="horaA" placeholder="fechaA" value="<?php echo date("hh:mm:ss");?>">
+                    <input type="hidden" class="form-control" id="id_user" name="id_user" value="<?php echo $cliente;?>"> 
+                    <input type="hidden" class="form-control" id="statusA" name="statusA" value="Pendiente">   
+                    
+                    
+                    <h4 align="center" class="titulos">Nueva actividad: </h4>
+                  
+
+                    <div class="row">
+                      <div class="col-md-12 titulos2"><label for="" id="idFechas_Cursoslabel">Seleccione una Fecha</label>
+                        <div class="input-group">
+                         <input class="form-control input-xs" id="fechaA" name="fechaA" placeholder="MM/DD/YYY" type="text" value="" required autocomplete="off" />
+                                  <div class="input-group-addon">
+                                 <i class="fa fa-calendar"></i>
+                               </div>
+                           </div>
+                      </div>  
+                    </div>
+                    <div class="row">
+                      <div class="col-md-12 titulos2"><label for="">Seleccione una Actividad:</label>
+                              <select name="tipoA" id="tipoA" class="col-md-2 form-control" required="">
+                          <option value="GPS">GPS</option>
+                          <option value="CAMARAS">CAMARAS</option>  
+                          <option value="SISTEMAS">SISTEMAS</option>        
+                            
+                          </select>
+                                 
+                      </div>  
+                    </div>
+
+                  <div class="row">     
+                    <div class="col-md-12 titulos2">
+                      <label for="">Describe la actividad:</label>
+                      <input type="text" class="form-control input-xs" id="descripcion" name="descripcion" placeholder="descripcion" value="<?php echo $vte->descripcion;?>" required >
+                    </div>              
+                  </div>
+
+   
+                                    
+                    <div class="row">     
+                    <div class="col-md-12 titulos2">
+                      <label for="">Linea:</label>
+                          <select name="idLinea" id="idLinea" class="col-md-2 form-control" required="">
+                                <option value="">--</option>
+                                <?php  foreach ($this->model->ListarLineas()as $a): ?>
+                                <option  <?php echo $a->idLinea == "" ? 'selected' : ''; ?> value="<?php echo "$a->idLinea" ;?>"><?php echo $a->nLinea;?></option>
+                                <?php endforeach; ?>
+                          </select>
+                    </div>              
+                  </div>
+
+
+<script>
+    $(document).ready(function(){
+        load();
+    });
+
+    function load(){
+        $("#idLinea").change(function(e){
+        e.preventDefault();  
+        $("#idMaquina").empty();
+        var id = $("#idLinea").val();        
+        var parametros = {"id":id};  
+        $.ajax({
+            url:'actividad/reportes/getLinea.php',
+            data: parametros,      
+            success:function(data)
+            {                
+                $("#idMaquina").html(data).fadeIn('slow');
+              
+            }
+        })
+      });
+    
+}
+    </script>
+
+      
+                  <div class="row">     
+                    <div class="col-md-12 titulos2">
+                      <label for="">Maquina:</label>
+                          <select name="idMaquina" id="idMaquina" class="col-md-2 form-control">                                
+                          </select>
+                    </div>              
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-10">
+                        <!-- <label for="">Imagen 1:</label> -->
+                      <input type="hidden" class="form-control" id="imagen" name="imagen" placeholder="Imagen 1" value="<?php echo $vte->imagen; ?>"  >
+                    
+                    </div>
+                    <!-- <div class="col-md-2" align="right">
+                      <br><label name="imagen" id="imagen"></label>
+                      <input name="Subir Imagen" type="button" class="btn btn-info" id="Subir Imagen" onclick="javascript:subirimagen();" value="Subir Imagen" />
+                    </div>
+                  </div>  -->
+                                   
+                   <div class="row">
+                   <div class="col-md-10">
+                     <!--  <label for="">Imagen 2:</label>-->
+                      <input type="hidden" class="form-control" id="imagen2" name="imagen2" placeholder="Imagen 2" value="<?php echo $vte->imagen2; ?>"  >
+                    </div>
+                  <!--   <div class="col-md-2" align="right"><br>
+                      <input name="Subir Imagen" type="button" class="btn btn-info" id="Subir Imagen" onclick="javascript:subirimagen2();" value="Subir Imagen" />
+                    </div>-->
+                  </div> 
+
+                 <div class="row">
+                    <div class="col-md-12" align="center">
+                          <br><br>
+                          <input type="submit"  id="Registrar" class="btn btn-success" value='Registrar'/>
+                          <input type="button" id="cancelar" class="btn btn-danger" name="Cancelar" value="Cancelar" onClick="location.href='?c=menu_principal&a=menu_usuarios'">             
+                    </div>
+                 </div>                          
+              </div>
+              </form>
+
+</div>
+
+</div>
+       
+</div>
+
+
+
+

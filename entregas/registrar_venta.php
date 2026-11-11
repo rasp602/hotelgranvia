@@ -140,7 +140,7 @@ try {
         $idUsuario,
         $idHotel,
         $total,
-        'ENTREGA',
+        'EN',
         $gananciaG
     );
 
